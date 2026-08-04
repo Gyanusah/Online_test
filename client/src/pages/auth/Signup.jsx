@@ -76,12 +76,29 @@ const Signup = () => {
           role === "student" ? formData.preferredLanguage : undefined,
       };
 
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // const response = await fetch("http://localhost:5000/api/auth/signup", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(payload),
+      // });
 
+      try {
+        const response = await authAPI.signup(payload);
+
+        const data = response.data;
+
+        console.log("Signup Success:", data);
+
+        // Example
+        localStorage.setItem("token", data.token);
+        navigate("/login"); // or dashboard
+      } catch (error) {
+        console.error(error);
+
+        const message = error.response?.data?.message || "Signup failed";
+
+        alert(message);
+      }
       const result = await response.json();
 
       if (!response.ok || !result.success) {
