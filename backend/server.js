@@ -62,7 +62,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/uploads", express.static("uploads"));
 
 // Health check route
-app.get("/api/health", (req, res) => {
+app.get("/", (req, res) => {
   res.json({ status: "OK", message: "Server is running" });
 });
 
