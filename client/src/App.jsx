@@ -3,7 +3,7 @@ import "./App.css";
 import Navbar from "./components/NavBar";
 import Home from "./page/Home";
 import Footer from "./components/Footer";
-import CourseDetail from "./page/course/CourseDetail";
+
 import Contact from "./page/Contact";
 import About from "./page/About";
 import TestPage from "./page/Test/TestPage";
@@ -65,7 +65,7 @@ function App() {
           element={
             <>
               <Navbar />
-              <CourseDetail />
+              {/* <CourseDetail /> */}
               <Footer />
             </>
           }

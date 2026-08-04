@@ -131,6 +131,7 @@ export default function Footer() {
                 <div>
                   <p className="font-semibold text-white">Phone</p>
                   <p className="text-gray-400">+9779826753125</p>
+                  <p className="text-gray-400">+9779866156534</p>
                 </div>
               </div>
 
@@ -139,6 +140,7 @@ export default function Footer() {
                 <div>
                   <p className="font-semibold text-white">Email</p>
                   <p className="text-gray-400">Shahgyanu0@gmail.com</p>
+                  <p className="text-gray-400">integral@languageacademy.com</p>
                 </div>
               </div>
             </div>

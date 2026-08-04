@@ -39,6 +39,7 @@ const Contact = () => {
                 <div>
                   <h3 className="font-semibold">Phone</h3>
                   <p className="text-gray-600">+977 9826753125</p>
+                  <p className="text-gray-600">+977 9866156534</p>
                 </div>
               </div>
 
