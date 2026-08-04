@@ -59,7 +59,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/reviews", reviewRoutes);
 // Serve uploaded files
-app.use("/uploads", express.static("uploads"));
+//app.use("/uploads", express.static("uploads"));
 
 // Health check route
 app.get("/", (req, res) => {
