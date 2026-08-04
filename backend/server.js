@@ -34,7 +34,35 @@ console.log(__dirname);
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = ["https://online-test-7u27.vercel.app/"];
+
+      // Allow any Vercel preview deployment (rent-finder-XXXX.vercel.app)
+      const isVercelPreview = origin.match(
+        /https:\/\/rent-finder-[a-z0-9]+\.vercel\.app$/,
+      );
+      const isAllowed =
+        allowedOrigins.includes(origin.replace(/\/$/, "")) || isVercelPreview;
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 200,
+  }),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
