@@ -12,6 +12,7 @@ import {
   EyeOff,
   MapPin,
 } from "lucide-react";
+import { authAPI } from "../../utils/api";
 
 const allowedRoles = ["student", "institute", "admin"];
 
