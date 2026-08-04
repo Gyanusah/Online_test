@@ -20,6 +20,15 @@ const notificationRoutes = require("./routes/notifications");
 const analyticsRoutes = require("./routes/analytics");
 const questionRoutes = require("./routes/questionRoutes");
 const reviewRoutes = require("./routes/reviews");
+const path = require("path");
+const dns = require("dns");
+
+dns.setDefaultResultOrder("ipv6first");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+// __filename and __dirname are available automatically in CommonJS
+console.log(__filename);
+console.log(__dirname);
 
 // Initialize Express app
 const app = express();
