@@ -15,6 +15,7 @@ const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
+  const [price, setPrice] = useState(0);
   const [instructor, setInstructor] = useState("");
   const [category, setCategory] = useState("");
   const [duration, setDuration] = useState(0);
@@ -35,18 +36,8 @@ const Courses = () => {
 
   const resetCourseForm = () => {
     setTitle("");
-    setInstructor("");
-    setCategory("");
-    setDuration(0);
-    setDescription("");
-    setStatus("Draft");
+    setPrice(0);
     setLevel("Beginner");
-    setTotalQuestions(0);
-    setTotalMarks(0);
-    setPassingMarks(0);
-    setStartDate("");
-    setEndDate("");
-    setCourseMaterial(null);
   };
 
   const handleCourseMaterialChange = (event) => {
@@ -61,31 +52,8 @@ const Courses = () => {
       setSubmitting(true);
       const formData = new FormData();
       formData.append("title", title);
-      formData.append("description", description);
-      formData.append("duration", duration || 0);
+      formData.append("price", Number(price) || 0);
       formData.append("level", level);
-      formData.append("totalQuestions", totalQuestions || 0);
-      formData.append("totalMarks", totalMarks || 0);
-      formData.append("passingMarks", passingMarks || 0);
-      formData.append(
-        "startDate",
-        startDate || new Date().toISOString().slice(0, 10),
-      );
-      formData.append(
-        "endDate",
-        endDate ||
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .slice(0, 10),
-      );
-      formData.append("isPublished", status === "Active");
-      formData.append("requiresApproval", false);
-      if (category) {
-        formData.append("tags", category);
-      }
-      if (courseMaterial) {
-        formData.append("courseMaterial", courseMaterial);
-      }
 
       const response = await instituteAPI.createCourse(formData);
       if (response.data.success) {
@@ -93,64 +61,6 @@ const Courses = () => {
         setShowAddModal(false);
         resetCourseForm();
       }
-    } catch (error) {
-      console.error("Error creating course:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    try {
-      const response = await instituteAPI.getCourses();
-      if (response.data.success) {
-        setCourses(response.data.data.courses);
-      }
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-      // Use mock data if API fails
-      // setCourses([
-      //   {
-      //     id: 1,
-      //     title: 'Full Stack Web Development',
-      //     instructor: 'Dr. Sarah Johnson',
-      //     students: 234,
-      //     duration: '12 weeks',
-      //     status: 'Active',
-      //     category: 'Web Development'
-      //   },
-      //   {
-      //     id: 2,
-      //     title: 'Data Science & Machine Learning',
-      //     instructor: 'Prof. Michael Chen',
-      //     students: 189,
-      //     duration: '16 weeks',
-      //     status: 'Active',
-      //     category: 'Data Science'
-      //   },
-      //   {
-      //     id: 3,
-      //     title: 'Cloud Computing with AWS',
-      //     instructor: 'Dr. Emily Brown',
-      //     students: 156,
-      //     duration: '10 weeks',
-      //     status: 'Active',
-      //     category: 'Cloud'
-      //   },
-      //   {
-      //     id: 4,
-      //     title: 'Mobile App Development',
-      //     instructor: 'Prof. David Wilson',
-      //     students: 98,
-      //     duration: '14 weeks',
-      //     status: 'Draft',
-      //     category: 'Mobile'
-      //   }
-      // ]);
     } finally {
       setLoading(false);
     }
@@ -255,39 +165,54 @@ const Courses = () => {
           <h2 className="text-xl font-bold text-gray-800">All Courses</h2>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Course
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Instructor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Questions
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Duration
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {courseList.length === 0 ? (
+        {courseList.length === 0 ? (
+          <div className="p-8">
+            <div className="mx-auto max-w-xl rounded-3xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                <GraduationCap size={28} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No courses available yet
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Create your first course to start inviting students and sharing
+                valuable learning material.
+              </p>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center justify-center rounded-full bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
+              >
+                Add First Course
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-sm text-gray-500">
-                    No courses available yet.
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Course
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Instructor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Questions
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Duration
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ) : (
-                courseList.map((course) => {
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {courseList.map((course) => {
                   const courseStatus = course.isPublished ? "Active" : "Draft";
                   const courseCategory = Array.isArray(course.tags)
                     ? course.tags[0]
@@ -372,11 +297,11 @@ const Courses = () => {
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Add Course Modal */}
@@ -409,35 +334,21 @@ const Courses = () => {
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Instructor
-                  </label>
-                  <input
-                    type="text"
-                    value={instructor}
-                    onChange={(e) => setInstructor(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., Dr. Sarah Johnson"
-                  />
-                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category
+                      Price
                     </label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
+                    <input
+                      type="number"
+                      min="0"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Web Development">Web Development</option>
-                      <option value="Data Science">Data Science</option>
-                      <option value="Mobile">Mobile</option>
-                      <option value="Cloud">Cloud</option>
-                      <option value="AI/ML">AI/ML</option>
-                    </select>
+                      placeholder="e.g., 1000"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -454,131 +365,7 @@ const Courses = () => {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Duration (minutes) *
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={duration}
-                      onChange={(e) => setDuration(Number(e.target.value))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="e.g., 120"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Total Questions
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={totalQuestions}
-                      onChange={(e) =>
-                        setTotalQuestions(Number(e.target.value))
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="e.g., 20"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Total Marks
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={totalMarks}
-                      onChange={(e) => setTotalMarks(Number(e.target.value))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="e.g., 100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Passing Marks
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={passingMarks}
-                      onChange={(e) => setPassingMarks(Number(e.target.value))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="e.g., 60"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="Draft">Draft</option>
-                      <option value="Active">Active</option>
-                      <option value="Archived">Archived</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Provide a brief description of the course..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Course PDF
-                  </label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleCourseMaterialChange}
-                    className="w-full text-sm"
-                  />
-                  {courseMaterial && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      Selected file: {courseMaterial.name}
-                    </p>
-                  )}
-                </div>
+
                 <div className="p-6 border-t border-gray-100 flex justify-end gap-4">
                   <button
                     type="button"

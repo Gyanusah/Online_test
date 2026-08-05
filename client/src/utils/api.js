@@ -65,7 +65,8 @@ export const userAPI = {
 export const instituteAPI = {
   getStudents: () => api.get("/institutes/students"),
   getStats: () => api.get("/institutes/stats"),
-  getAnalytics: (timeRange) => api.get(`/institutes/analytics?timeRange=${timeRange}`),
+  getAnalytics: (timeRange) =>
+    api.get(`/institutes/analytics?timeRange=${timeRange}`),
   getRecentEnrollments: () => api.get("/institutes/recent-enrollments"),
   getPopularCourses: () => api.get("/institutes/popular-courses"),
   getCourses: () => api.get("/institutes/courses"),
@@ -157,6 +158,18 @@ export const examAPI = {
 export const testAPI = {
   getTests: () => api.get("/tests"),
   getTestById: (id) => api.get(`/tests/${id}`),
+  getLanguages: () => api.get("/tests/languages/all"),
+  getLanguageById: (id) => api.get(`/tests/languages/${id}`),
+};
+
+// Notes API
+export const noteAPI = {
+  uploadNote: (formData) =>
+    api.post("/notes", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  getNotes: (params) => api.get("/notes", { params }),
+  getNote: (id) => api.get(`/notes/${id}`),
 };
 
 // Notification API

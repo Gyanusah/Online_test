@@ -40,13 +40,19 @@ const InstituteLayout = () => {
       icon: FileQuestion,
       label: "Question Bank",
     },
+    { path: "/institute/manage-notes", icon: FileText, label: "Manage Notes" },
+    {
+      path: "/institute/manage-vocabulary",
+      icon: FileText,
+      label: "Manage Vocabulary",
+    },
+
     {
       path: "/institute/create-question",
       icon: Plus,
       label: "Create Question",
     },
     { path: "/institute/create-test", icon: BookOpen, label: "Create Test" },
-    { path: "/institute/manage-tests", icon: BookOpen, label: "Manage Tests" },
     {
       path: "/institute/student-results",
       icon: ClipboardCheck,
@@ -170,8 +176,10 @@ const InstituteLayout = () => {
         </header>
 
         {/* Page content */}
-        <main className="p-6">
-          <Outlet />
+        <main className="py-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

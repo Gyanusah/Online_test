@@ -124,6 +124,60 @@ const userSchema = new mongoose.Schema(
     lastPaymentAt: {
       type: Date,
     },
+    pendingSubscription: {
+      language: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Language",
+      },
+      languageName: {
+        type: String,
+        trim: true,
+      },
+      level: {
+        type: String,
+        trim: true,
+      },
+      amount: {
+        type: Number,
+        default: 0,
+      },
+      requestedAt: {
+        type: Date,
+      },
+    },
+    subscribedLanguages: [
+      {
+        languageId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Language",
+          required: true,
+        },
+        languageName: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        level: {
+          type: String,
+          trim: true,
+        },
+        subscribedAt: {
+          type: Date,
+          required: true,
+          default: Date.now,
+        },
+        expiryDate: {
+          type: Date,
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: ["active", "expired", "cancelled"],
+          required: true,
+          default: "active",
+        },
+      },
+    ],
     // Teacher-specific fields (now part of institute role)
     employeeId: {
       type: String,

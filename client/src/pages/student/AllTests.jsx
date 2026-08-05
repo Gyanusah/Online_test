@@ -8,13 +8,59 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const AllTests = () => {
   const [tests, setTests] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState("");
+  const [subscribedLanguages, setSubscribedLanguages] = useState([]);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const currentUser = JSON.parse(storedUser);
+        const activeLanguages = new Set();
+
+        if (Array.isArray(currentUser.subscribedLanguages)) {
+          currentUser.subscribedLanguages.forEach((sub) => {
+            if (!sub || !sub.status) return;
+            if (sub.status !== "active") return;
+            if (sub.expiryDate && new Date(sub.expiryDate) <= new Date())
+              return;
+            if (sub.language) activeLanguages.add(sub.language);
+            if (sub.languageName) activeLanguages.add(sub.languageName);
+            if (sub.name) activeLanguages.add(sub.name);
+          });
+        }
+
+        if (currentUser.subscriptionStatus === "active") {
+          if (currentUser.preferredLanguage) {
+            activeLanguages.add(currentUser.preferredLanguage);
+          }
+        }
+
+        const subscribedLangs = Array.from(activeLanguages);
+        setSubscribedLanguages(subscribedLangs);
+        if (!selectedLanguage && subscribedLangs.length > 0) {
+          setSelectedLanguage(subscribedLangs[0]);
+        }
+        setHasActiveSubscription(
+          subscribedLangs.length > 0 ||
+            currentUser.subscriptionStatus === "active",
+        );
+      } catch (error) {
+        console.error("Failed to parse stored user", error);
+      }
+    }
+
     fetchAllTests();
   }, []);
+
+  const normalizeLanguageName = (language) =>
+    String(language || "")
+      .trim()
+      .toLowerCase();
 
   const fetchAllTests = async () => {
     try {
@@ -24,7 +70,23 @@ const AllTests = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setTests(response.data.data.tests);
+      const serverTests = response.data.data.tests || [];
+      setTests(serverTests);
+
+      if (subscribedLanguages.length === 0 && serverTests.length > 0) {
+        const uniqueLanguages = Array.from(
+          new Set(
+            serverTests
+              .map((test) => String(test.language || "").trim())
+              .filter(Boolean),
+          ),
+        );
+        setSubscribedLanguages(uniqueLanguages);
+        if (!selectedLanguage && uniqueLanguages.length > 0) {
+          setSelectedLanguage(uniqueLanguages[0]);
+        }
+      }
+
       setLoading(false);
     } catch (err) {
       setError("Failed to load tests");
@@ -54,6 +116,25 @@ const AllTests = () => {
       );
     }
   };
+
+  const normalizedSubscribedLanguages = new Set(
+    subscribedLanguages
+      .map((language) => normalizeLanguageName(language))
+      .filter(Boolean),
+  );
+
+  const availableTests = tests.filter((test) => {
+    const normalizedTestLanguage = normalizeLanguageName(test.language);
+    return normalizedSubscribedLanguages.has(normalizedTestLanguage);
+  });
+
+  const filteredTests = selectedLanguage
+    ? availableTests.filter(
+        (test) =>
+          normalizeLanguageName(test.language) ===
+          normalizeLanguageName(selectedLanguage),
+      )
+    : availableTests;
 
   if (loading) {
     return (
@@ -85,19 +166,79 @@ const AllTests = () => {
         <p className="text-gray-600">Browse and start available tests</p>
       </div>
 
-      {tests.length === 0 ? (
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
+          <p className="text-gray-600">Filter tests by language:</p>
+        </div>
+        <select
+          value={selectedLanguage}
+          onChange={(e) => setSelectedLanguage(e.target.value)}
+          className="w-full sm:w-auto border rounded-lg px-4 py-2 text-gray-700"
+        >
+          <option value="">All subscribed languages</option>
+          {subscribedLanguages.map((language) => (
+            <option key={language} value={language}>
+              {language}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {!hasActiveSubscription ? (
+        <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
+          <BookOpen className="mx-auto text-gray-400 mb-4" size={48} />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            No Active Subscription
+          </h3>
+          <p className="text-gray-500 mb-4">
+            You need an active subscription to access tests. Subscribe to a
+            language and activate your plan.
+          </p>
+          <button
+            onClick={() => navigate("/student/subscription")}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Go to Subscription
+          </button>
+        </div>
+      ) : availableTests.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
           <BookOpen className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
             No Tests Available
           </h3>
-          <p className="text-gray-500">
-            There are no tests available at the moment.
+          <p className="text-gray-500 mb-4">
+            There are currently no tests available for your subscribed
+            language(s). Please check back later or contact support.
           </p>
+          <button
+            onClick={() => navigate("/student/subscription")}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Manage Subscription
+          </button>
+        </div>
+      ) : filteredTests.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
+          <BookOpen className="mx-auto text-gray-400 mb-4" size={48} />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            No Tests Available
+            {selectedLanguage ? ` for ${selectedLanguage}` : ""}
+          </h3>
+          <p className="text-gray-500 mb-4">
+            There are no tests available in the selected language. Please choose
+            a different subscribed language.
+          </p>
+          <button
+            onClick={() => setSelectedLanguage("")}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Show All Subscribed Languages
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tests.map((test) => (
+          {filteredTests.map((test) => (
             <div
               key={test._id}
               className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow"

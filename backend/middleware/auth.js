@@ -1,35 +1,38 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const { expireUserSubscriptions } = require("../middleware/subscription");
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'No authentication token, access denied' 
+      return res.status(401).json({
+        success: false,
+        message: "No authentication token, access denied",
       });
     }
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Get full user from database
-    const user = await User.findById(decoded.userId).select('-password');
-    
+    const user = await User.findById(decoded.userId).select("-password");
+
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'User not found' 
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
       });
     }
-    
+
+    await expireUserSubscriptions(user);
+
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ 
-      success: false, 
-      message: 'Token is not valid' 
+    res.status(401).json({
+      success: false,
+      message: "Token is not valid",
     });
   }
 };
@@ -37,9 +40,9 @@ const auth = async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Not authorized to access this route' 
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to access this route",
       });
     }
     next();

@@ -68,6 +68,8 @@ const Signup = () => {
       const payload = {
         ...formData,
         role,
+        firstName: role === "institute" ? undefined : formData.firstName,
+        lastName: role === "institute" ? undefined : formData.lastName,
         instituteName:
           role === "institute" || role === "student"
             ? formData.instituteName
@@ -192,49 +194,51 @@ const Signup = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
-                <div className="relative">
-                  <User
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="John"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+            {role !== "institute" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      placeholder="John"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <div className="relative">
-                  <User
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Doe"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      placeholder="Doe"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

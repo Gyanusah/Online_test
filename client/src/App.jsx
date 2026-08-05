@@ -22,6 +22,10 @@ import Notifications from "./pages/student/Notifications";
 import StudentSettings from "./pages/student/Settings";
 import TakeExam from "./pages/student/TakeExam";
 import AllTests from "./pages/student/AllTests";
+import Notes from "./pages/student/Notes";
+import Vocabulary from "./pages/student/Vocabulary";
+import Languages from "./page/Languages";
+import LanguageDetails from "./page/LanguageDetails";
 import InstituteLayout from "./layouts/InstituteLayout";
 import InstituteDashboard from "./pages/institute/InstituteDashboard";
 import InstituteCourses from "./pages/institute/Courses";
@@ -31,6 +35,8 @@ import InstituteSettings from "./pages/institute/Settings";
 import InstituteNotifications from "./pages/institute/Notifications";
 import InstituteReviews from "./pages/institute/Reviews";
 import InstituteReports from "./pages/institute/Reports";
+import NotesManager from "./pages/institute/NotesManager";
+import VocabularyManager from "./pages/institute/VocabularyManager";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import CreateTest from "./pages/teacher/CreateTest";
 import QuestionBank from "./pages/teacher/QuestionBank";
@@ -91,6 +97,26 @@ function App() {
           }
         />
         <Route
+          path="/languages"
+          element={
+            <>
+              <Navbar />
+              <Languages />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/languages/:languageId"
+          element={
+            <>
+              <Navbar />
+              <LanguageDetails />
+              <Footer />
+            </>
+          }
+        />
+        <Route
           path="/test"
           element={
             <>
@@ -139,6 +165,8 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="subscription" element={<Subscription />} />
           <Route path="all-tests" element={<AllTests />} />
+          <Route path="notes" element={<Notes />} />
+          <Route path="vocabulary" element={<Vocabulary />} />
           <Route path="exam/:applicationId" element={<TakeExam />} />
           <Route path="results" element={<Results />} />
           {/* <Route path="certificates" element={<Certificates />} /> */}
@@ -164,10 +192,11 @@ function App() {
           <Route path="create-question" element={<CreateQuestion />} />
           <Route path="create-question/:testId" element={<CreateQuestion />} />
           <Route path="create-test" element={<CreateTest />} />
-          <Route path="manage-tests" element={<CreateTest />} />
           <Route path="student-results" element={<TeacherDashboard />} />
           <Route path="reviews" element={<InstituteReviews />} />
           <Route path="reports" element={<InstituteReports />} />
+          <Route path="manage-notes" element={<NotesManager />} />
+          <Route path="manage-vocabulary" element={<VocabularyManager />} />
           <Route path="notifications" element={<InstituteNotifications />} />
           <Route path="settings" element={<InstituteSettings />} />
         </Route>
@@ -186,7 +215,6 @@ function App() {
           <Route path="create-question" element={<CreateQuestion />} />
           <Route path="create-question/:testId" element={<CreateQuestion />} />
           <Route path="create-test" element={<CreateTest />} />
-          <Route path="manage-tests" element={<CreateTest />} />
           <Route path="student-results" element={<TeacherDashboard />} />
           <Route path="reviews" element={<TeacherDashboard />} />
           <Route path="reports" element={<TeacherDashboard />} />

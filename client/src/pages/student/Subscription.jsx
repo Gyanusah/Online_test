@@ -7,17 +7,19 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authAPI, studentAPI } from "../../utils/api";
+import { authAPI, studentAPI, testAPI } from "../../utils/api";
 
 const MIN_AMOUNT = 600;
 const MAX_AMOUNT = 800;
 
 const Subscription = () => {
   const navigate = useNavigate();
+  const [languages, setLanguages] = useState([]);
   const [formData, setFormData] = useState({
     referralCode: "",
     amount: "800",
     language: "",
+    languageId: "",
   });
   const [subscription, setSubscription] = useState({
     subscriptionStatus: "none",
@@ -50,6 +52,7 @@ const Subscription = () => {
           ...prev,
           amount: String(user.subscriptionAmount || 800),
           language: user.preferredLanguage || prev.language || "",
+          languageId: prev.languageId || "",
         }));
       }
     } catch (error) {
@@ -59,8 +62,20 @@ const Subscription = () => {
     }
   };
 
+  const fetchLanguages = async () => {
+    try {
+      const response = await testAPI.getLanguages();
+      setLanguages(
+        response?.data?.data?.languages || response?.data?.languages || [],
+      );
+    } catch (error) {
+      console.error("Error fetching languages:", error);
+    }
+  };
+
   useEffect(() => {
     fetchSubscription();
+    fetchLanguages();
   }, []);
 
   const handleSubmit = async (event) => {
@@ -72,6 +87,7 @@ const Subscription = () => {
       const response = await studentAPI.requestSubscription({
         referralCode: formData.referralCode.trim(),
         amount: Number(formData.amount) || 800,
+        languageId: formData.languageId || undefined,
         language: formData.language || undefined,
       });
 
@@ -227,6 +243,45 @@ const Subscription = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Language
+              </label>
+              <select
+                value={formData.languageId}
+                onChange={(event) => {
+                  const selected = languages.find(
+                    (lang) => lang._id === event.target.value,
+                  );
+                  setFormData((prev) => ({
+                    ...prev,
+                    languageId: event.target.value,
+                    language: selected?.name || "",
+                    amount: String(selected?.subscriptionAmount || prev.amount),
+                  }));
+                }}
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a language</option>
+                {languages.map((lang) => (
+                  <option key={lang._id} value={lang._id}>
+                    {lang.name} ({lang.code}) - ₹
+                    {lang.subscriptionAmount || 800}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">
+                Choose the language you want to subscribe to.
+              </p>
+              {languages.length === 0 && (
+                <p className="text-xs text-red-500 mt-2">
+                  No languages available yet. Contact support or try again
+                  later.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Referral Code
               </label>
               <input
@@ -248,7 +303,7 @@ const Subscription = () => {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !formData.languageId}
               className="w-full rounded-lg bg-blue-600 px-4 py-3 text-white font-medium hover:bg-blue-700 disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit Subscription Request"}

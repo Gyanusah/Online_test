@@ -23,6 +23,23 @@ const languageSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    shortDescription: {
+      type: String,
+      default: "",
+    },
+    imageUrl: {
+      type: String,
+      default: "",
+    },
+    duration: {
+      type: String,
+      default: "1 Month",
+    },
+    instituteName: {
+      type: String,
+      default: "Language Institute",
+      trim: true,
+    },
     subscriptionAmount: {
       type: Number,
       default: 800,

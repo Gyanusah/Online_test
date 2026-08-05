@@ -42,6 +42,7 @@
 // export default HeroSection;
 
 import React from "react";
+import { Link } from "react-router-dom";
 import Image from "../assets/HeroSction.jpeg";
 import { ArrowRight, PlayCircle } from "lucide-react";
 
@@ -83,10 +84,13 @@ function HeroSection() {
                 <ArrowRight size={20} />
               </button>
 
-              <button className="flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900">
+              <Link
+                to="/languages"
+                className="flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900"
+              >
                 <PlayCircle size={22} />
                 Explore Courses
-              </button>
+              </Link>
             </div>
 
             {/* Stats */}

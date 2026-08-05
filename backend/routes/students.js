@@ -1,7 +1,12 @@
 const express = require("express");
 const https = require("https");
+const mongoose = require("mongoose");
 const router = express.Router();
 const { auth, authorize } = require("../middleware/auth");
+const {
+  requireActiveSubscription,
+  getActiveSubscriptions,
+} = require("../middleware/subscription");
 const User = require("../models/User");
 const Test = require("../models/Test");
 const Application = require("../models/Application");
@@ -102,7 +107,14 @@ router.post(
   authorize("student"),
   async (req, res) => {
     try {
-      const { referralCode, amount, language, preferredLanguage } = req.body;
+      const {
+        referralCode,
+        amount,
+        language,
+        languageId,
+        level,
+        preferredLanguage,
+      } = req.body;
       const student = await User.findById(req.user._id);
 
       if (!student) {
@@ -112,8 +124,37 @@ router.post(
         });
       }
 
+      let languageDoc = null;
+      let chosenLevel = level || "Beginner";
+      const requestedLanguageName =
+        language || preferredLanguage || student.preferredLanguage;
+
+      if (languageId && mongoose.Types.ObjectId.isValid(languageId)) {
+        languageDoc = await Language.findById(languageId);
+      }
+
+      if (!languageDoc && requestedLanguageName) {
+        const escaped = String(requestedLanguageName)
+          .trim()
+          .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        languageDoc = await Language.findOne({
+          $or: [
+            { name: new RegExp(`^${escaped}$`, "i") },
+            { code: new RegExp(`^${escaped}$`, "i") },
+          ],
+        });
+      }
+
+      if (!languageDoc) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A supported language is required for subscription. Please choose a valid language.",
+        });
+      }
+
       const configuredAmount = await getLanguageSubscriptionAmount(
-        language || preferredLanguage || student.preferredLanguage,
+        languageDoc.name,
       );
 
       let effectiveAmount = configuredAmount || Number(amount) || 800;
@@ -126,6 +167,14 @@ router.post(
 
       let referralDiscount = 0;
       let referrer = null;
+
+      if (
+        languageDoc &&
+        Array.isArray(languageDoc.levels) &&
+        languageDoc.levels.length > 0
+      ) {
+        chosenLevel = chosenLevel || languageDoc.levels[0];
+      }
 
       if (referralCode) {
         referrer = await User.findOne({ referralCode, role: "student" });
@@ -160,6 +209,14 @@ router.post(
       student.subscriptionExpiresAt = null;
       student.referralDiscountAmount = referralDiscount;
       student.referredBy = referrer ? referrer._id : null;
+      student.preferredLanguage = languageDoc.name;
+      student.pendingSubscription = {
+        language: languageDoc._id,
+        languageName: languageDoc.name,
+        level: chosenLevel,
+        amount: effectiveAmount,
+        requestedAt: new Date(),
+      };
 
       await student.save();
 
@@ -251,43 +308,9 @@ router.post(
         );
       }
 
-      if (shouldSkipVerification) {
-        const updatedStudent = await User.findByIdAndUpdate(
-          req.user._id,
-          {
-            subscriptionStatus: "active",
-            subscriptionApprovedAt: new Date(),
-            subscriptionApprovedBy: null,
-            subscriptionExpiresAt: new Date(
-              Date.now() + 30 * 24 * 60 * 60 * 1000,
-            ),
-            paymentMethod: "esewa",
-            lastTransactionId: transactionId,
-            lastPaymentAt: new Date(),
-          },
-          { new: true },
-        ).select("-password");
-
-        return res.status(200).json({
-          success: true,
-          message:
-            "Sandbox payment completed. Your subscription is now active.",
-          data: {
-            checkoutUrl,
-            pendingPayment: false,
-            paymentConfirmed: true,
-            sandboxMode: true,
-            user: updatedStudent,
-          },
-        });
-      }
-
-      // Handle structured result from verification
       if (!paymentResult || paymentResult.success === false) {
-        // Map internal reasons to clear client responses
         switch (paymentResult && paymentResult.message) {
           case "missing_merchant":
-            // Server misconfiguration — instruct admin/developer
             return res.status(500).json({
               success: false,
               message:
@@ -315,26 +338,47 @@ router.post(
         }
       }
 
+      const studentToUpdate = await User.findById(req.user._id);
+      const activeExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      const subscriptionEntry = {
+        languageId: studentToUpdate.pendingSubscription?.language || null,
+        languageName:
+          studentToUpdate.pendingSubscription?.languageName ||
+          studentToUpdate.preferredLanguage ||
+          "Unknown",
+        level: studentToUpdate.pendingSubscription?.level || "Beginner",
+        subscribedAt: new Date(),
+        expiryDate: activeExpiry,
+        status: "active",
+      };
+
       const updatedStudent = await User.findByIdAndUpdate(
         req.user._id,
         {
           subscriptionStatus: "active",
           subscriptionApprovedAt: new Date(),
           subscriptionApprovedBy: null,
-          subscriptionExpiresAt: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000,
-          ),
+          subscriptionExpiresAt: activeExpiry,
           paymentMethod: "esewa",
           lastTransactionId: transactionId,
           lastPaymentAt: new Date(),
+          $push: { subscribedLanguages: subscriptionEntry },
+          pendingSubscription: {},
         },
         { new: true },
       ).select("-password");
 
-      res.json({
+      return res.status(200).json({
         success: true,
         message: "Subscription activated successfully",
-        data: { user: updatedStudent, checkoutUrl },
+        data: {
+          checkoutUrl,
+          pendingPayment: false,
+          paymentConfirmed: true,
+          sandboxMode: shouldSkipVerification,
+          user: updatedStudent,
+        },
       });
     } catch (error) {
       res.status(500).json({
@@ -351,7 +395,9 @@ router.get("/dashboard", auth, authorize("student"), async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    const applications = await Application.find({ student: studentId });
+    const activeSubscriptions = getActiveSubscriptions(req.user).length;
+    const subscriptions = activeSubscriptions;
+
     const completedExams = await Exam.find({
       student: studentId,
       status: { $in: ["submitted", "auto_submitted", "terminated"] },
@@ -364,7 +410,7 @@ router.get("/dashboard", auth, authorize("student"), async (req, res) => {
     res.json({
       success: true,
       data: {
-        subscriptions: applications.length,
+        subscriptions,
         completedExams: completedExams.length,
         notifications: notificationsCount,
         recentActivity: [],
@@ -434,7 +480,7 @@ router.get("/results", auth, authorize("student"), async (req, res) => {
           // Get selected answer text
           if (selectedAnswerText) {
             const selectedOption = question.options.find(
-              (opt) => String(opt._id) === String(selectedAnswerText)
+              (opt) => String(opt._id) === String(selectedAnswerText),
             );
             selectedAnswerText = selectedOption?.text || selectedAnswerText;
           }
@@ -444,9 +490,18 @@ router.get("/results", auth, authorize("student"), async (req, res) => {
           correctAnswerText = correctOption?.text || "Not available";
         } else if (question?.type === "true_false") {
           // Convert boolean to text
-          correctAnswerText = question.correctAnswer === true ? "True" : "False";
-          selectedAnswerText = answer.answer === true ? "True" : answer.answer === false ? "False" : selectedAnswerText;
-        } else if (question?.type === "fill_in_blanks" && question?.blanks?.length > 0) {
+          correctAnswerText =
+            question.correctAnswer === true ? "True" : "False";
+          selectedAnswerText =
+            answer.answer === true
+              ? "True"
+              : answer.answer === false
+                ? "False"
+                : selectedAnswerText;
+        } else if (
+          question?.type === "fill_in_blanks" &&
+          question?.blanks?.length > 0
+        ) {
           // Get correct answer from blanks
           correctAnswerText = question.blanks[0]?.answer || "Not available";
         }
@@ -534,16 +589,39 @@ router.get("/notifications", auth, authorize("student"), async (req, res) => {
 // @access  Private (Student only)
 router.get("/all-tests", auth, authorize("student"), async (req, res) => {
   try {
-    const studentId = req.user._id;
+    const student = await User.findById(req.user._id);
+    const activeSubscriptions = (student.subscribedLanguages || []).filter(
+      (sub) => sub.status === "active" && new Date(sub.expiryDate) > new Date(),
+    );
 
-    // Get all tests
-    const allTests = await Test.find({ isActive: true })
+    const subscribedLanguageNames = activeSubscriptions
+      .map((sub) => String(sub.languageName).trim())
+      .filter(Boolean);
+
+    if (
+      subscribedLanguageNames.length === 0 &&
+      student.subscriptionStatus === "active" &&
+      student.preferredLanguage
+    ) {
+      subscribedLanguageNames.push(String(student.preferredLanguage).trim());
+    }
+
+    const featuredTests = await Test.find({ isActive: true })
       .populate("institute", "name instituteName")
       .sort({ createdAt: -1 });
 
+    const filteredTests = featuredTests.filter((test) => {
+      if (!test.language) return false;
+      const testLanguage = String(test.language).trim().toLowerCase();
+      return subscribedLanguageNames.some(
+        (languageName) =>
+          testLanguage === String(languageName).trim().toLowerCase(),
+      );
+    });
+
     res.json({
       success: true,
-      data: { tests: allTests },
+      data: { tests: filteredTests },
     });
   } catch (error) {
     res.status(500).json({

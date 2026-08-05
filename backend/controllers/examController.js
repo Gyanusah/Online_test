@@ -7,8 +7,6 @@ const Notification = require("../models/Notification");
 const User = require("../models/User");
 const { shouldAllowUnlimitedAttempts } = require("../utils/examAccess");
 
-
-
 const startExam = async (req, res) => {
   console.log("=== START EXAM CALLED ===");
   console.log("Request body:", req.body);
@@ -127,6 +125,28 @@ const startExam = async (req, res) => {
         success: false,
         message:
           "Subscription is required before starting this test. Please request and wait for admin approval.",
+      });
+    }
+
+    const activeSubscriptions = (student.subscribedLanguages || [])
+      .filter(
+        (sub) =>
+          sub.status === "active" && new Date(sub.expiryDate) > new Date(),
+      )
+      .map((sub) =>
+        String(sub.languageName || "")
+          .trim()
+          .toLowerCase(),
+      );
+
+    const testLanguage = String(application.test.language || "")
+      .trim()
+      .toLowerCase();
+    if (!activeSubscriptions.includes(testLanguage)) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Your active subscription does not cover this test's language. Please subscribe to the correct language before starting this exam.",
       });
     }
 
@@ -757,7 +777,7 @@ const getExamResults = async (req, res) => {
         // Get selected answer text
         if (selectedAnswerText) {
           const selectedOption = question.options.find(
-            (opt) => String(opt._id) === String(selectedAnswerText)
+            (opt) => String(opt._id) === String(selectedAnswerText),
           );
           selectedAnswerText = selectedOption?.text || selectedAnswerText;
         }
@@ -768,8 +788,16 @@ const getExamResults = async (req, res) => {
       } else if (question?.type === "true_false") {
         // Convert boolean to text
         correctAnswerText = question.correctAnswer === true ? "True" : "False";
-        selectedAnswerText = answer.answer === true ? "True" : answer.answer === false ? "False" : selectedAnswerText;
-      } else if (question?.type === "fill_in_blanks" && question?.blanks?.length > 0) {
+        selectedAnswerText =
+          answer.answer === true
+            ? "True"
+            : answer.answer === false
+              ? "False"
+              : selectedAnswerText;
+      } else if (
+        question?.type === "fill_in_blanks" &&
+        question?.blanks?.length > 0
+      ) {
         // Get correct answer from blanks
         correctAnswerText = question.blanks[0]?.answer || "Not available";
       } else {
@@ -786,12 +814,12 @@ const getExamResults = async (req, res) => {
       };
     });
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       exam: {
         ...exam.toObject(),
-        answerBreakdown
-      }
+        answerBreakdown,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -818,7 +846,7 @@ const getExamHistory = async (req, res) => {
           // Get selected answer text
           if (selectedAnswerText) {
             const selectedOption = question.options.find(
-              (opt) => String(opt._id) === String(selectedAnswerText)
+              (opt) => String(opt._id) === String(selectedAnswerText),
             );
             selectedAnswerText = selectedOption?.text || selectedAnswerText;
           }
@@ -828,9 +856,18 @@ const getExamHistory = async (req, res) => {
           correctAnswerText = correctOption?.text || "Not available";
         } else if (question?.type === "true_false") {
           // Convert boolean to text
-          correctAnswerText = question.correctAnswer === true ? "True" : "False";
-          selectedAnswerText = answer.answer === true ? "True" : answer.answer === false ? "False" : selectedAnswerText;
-        } else if (question?.type === "fill_in_blanks" && question?.blanks?.length > 0) {
+          correctAnswerText =
+            question.correctAnswer === true ? "True" : "False";
+          selectedAnswerText =
+            answer.answer === true
+              ? "True"
+              : answer.answer === false
+                ? "False"
+                : selectedAnswerText;
+        } else if (
+          question?.type === "fill_in_blanks" &&
+          question?.blanks?.length > 0
+        ) {
           // Get correct answer from blanks
           correctAnswerText = question.blanks[0]?.answer || "Not available";
         } else {
@@ -849,7 +886,7 @@ const getExamHistory = async (req, res) => {
 
       return {
         ...exam.toObject(),
-        answerBreakdown
+        answerBreakdown,
       };
     });
 

@@ -23,15 +23,34 @@ const StudentSidebar = ({ onLogout }) => {
       icon: CreditCard,
       label: "Subscription",
     },
-    {
-      path: "/student/all-tests",
-      icon: BookOpen,
-      label: "All Tests",
-    },
     { path: "/student/results", icon: Trophy, label: "Results" },
     { path: "/student/notifications", icon: Bell, label: "Notifications" },
     { path: "/student/settings", icon: Settings, label: "Settings" },
   ];
+
+  // Determine subscription status from stored user
+  let user = null;
+  try {
+    user = localStorage.getItem("user")
+      ? JSON.parse(localStorage.getItem("user"))
+      : null;
+  } catch (err) {
+    user = null;
+  }
+
+  const hasActiveSubscription = (() => {
+    if (!user) return false;
+    if (user.subscriptionStatus === "active") return true;
+    if (Array.isArray(user.subscribedLanguages)) {
+      return user.subscribedLanguages.some((sub) => {
+        if (!sub || !sub.status) return false;
+        if (sub.status !== "active") return false;
+        if (!sub.expiryDate) return true;
+        return new Date(sub.expiryDate) > new Date();
+      });
+    }
+    return false;
+  })();
 
   return (
     <div className="w-64 bg-white shadow-lg flex flex-col">
@@ -61,6 +80,50 @@ const StudentSidebar = ({ onLogout }) => {
               </li>
             );
           })}
+
+          {hasActiveSubscription && (
+            <>
+              <li>
+                <Link
+                  to="/student/all-tests"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    location.pathname === "/student/all-tests"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                  }`}
+                >
+                  <BookOpen size={20} />
+                  <span className="font-medium">All Tests</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/student/notes"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    location.pathname === "/student/notes"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                  }`}
+                >
+                  <FileText size={20} />
+                  <span className="font-medium">Notes</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/student/vocabulary"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    location.pathname === "/student/vocabulary"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                  }`}
+                >
+                  <BookOpen size={20} />
+                  <span className="font-medium">Vocabulary</span>
+                </Link>
+              </li>
+            </>
+          )}
         </ul>
       </nav>
 
