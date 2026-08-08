@@ -25,19 +25,20 @@ const languageRoutes = require("./routes/language");
 const path = require("path");
 const dns = require("dns");
 
-dns.setDefaultResultOrder("ipv6first");
-// dns.setServers(["8.8.8.8", "8.8.4.4"]);
+dns.setDefaultResultOrder("ipv4first");
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
-
-// __filename and __dirname are available automatically in CommonJS
-console.log(__filename);
-console.log(__dirname);
 
 // Initialize Express app
 const app = express();
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/eduplatform";
+const NODE_ENV = process.env.NODE_ENV || "development";
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (NODE_ENV === "production" && !MONGODB_URI) {
+  console.error(
+    "MONGODB_URI is required in production. Please configure it in Vercel environment variables.",
+  );
+}
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -49,6 +50,8 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
+    console.log("CORS origin:", origin);
+    if (NODE_ENV === "production") return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     console.warn("Blocked CORS origin:", origin);
     return callback(new Error("Not allowed by CORS"));
@@ -66,10 +69,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
+const connectUri =
+  MONGODB_URI ||
+  (NODE_ENV === "development"
+    ? "mongodb://127.0.0.1:27017/eduplatform"
+    : undefined);
+
+if (!connectUri) {
+  throw new Error(
+    "No MongoDB URI configured. Set MONGODB_URI in environment variables.",
+  );
+}
+
+console.log("Connecting to MongoDB:", connectUri);
+
 mongoose
-  .connect(MONGODB_URI)
+  .connect(connectUri)
   .then(() => console.log("MongoDB connected successfully"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
 
 // Routes
 app.use("/api/auth", authRoutes);
