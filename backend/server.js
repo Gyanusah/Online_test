@@ -33,10 +33,6 @@ dns.setServers(["1.1.1.1", "8.8.8.8"]);
 console.log(__filename);
 console.log(__dirname);
 
-// console.log("Seed script started");
-// console.log("Current directory:", process.cwd());
-// console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
-
 // Initialize Express app
 const app = express();
 
@@ -117,9 +113,9 @@ app.use((err, req, res, next) => {
 });
 
 //Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 
 module.exports = app;
