@@ -21,15 +21,21 @@ const analyticsRoutes = require("./routes/analytics");
 const questionRoutes = require("./routes/questionRoutes");
 const reviewRoutes = require("./routes/reviews");
 const notesRoutes = require("./routes/notes");
+const languageRoutes = require("./routes/language");
 const path = require("path");
 const dns = require("dns");
 
 dns.setDefaultResultOrder("ipv6first");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
+// dns.setServers(["8.8.8.8", "8.8.4.4"]);
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 // __filename and __dirname are available automatically in CommonJS
 console.log(__filename);
 console.log(__dirname);
+
+// console.log("Seed script started");
+// console.log("Current directory:", process.cwd());
+// console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
 
 // Initialize Express app
 const app = express();
@@ -84,6 +90,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/languages", languageRoutes);
 
 // Serve uploaded files
 app.use(
@@ -110,9 +117,9 @@ app.use((err, req, res, next) => {
 });
 
 //Start server
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 module.exports = app;

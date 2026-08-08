@@ -21,7 +21,7 @@ const seedUsers = async () => {
       password: "123456",
       role: "institute",
       instituteName: "Tech Institute",
-      location: "New York",
+      location: "Nepal",
       employeeId: "EMP123456",
       subjects: ["Mathematics", "Science", "English"],
       qualifications: ["Masters in Education", "Teaching Certification"],

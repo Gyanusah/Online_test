@@ -65,9 +65,10 @@ const Subscription = () => {
   const fetchLanguages = async () => {
     try {
       const response = await testAPI.getLanguages();
-      setLanguages(
-        response?.data?.data?.languages || response?.data?.languages || [],
-      );
+      console.log("Languages response:", response?.data);
+      const languages = response?.data?.languages || response?.data?.data?.languages || [];
+      console.log("Extracted languages:", languages);
+      setLanguages(languages);
     } catch (error) {
       console.error("Error fetching languages:", error);
     }

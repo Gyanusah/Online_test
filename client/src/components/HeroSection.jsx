@@ -73,8 +73,8 @@ function HeroSection() {
 
             {/* Description */}
             <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-300 md:text-xl">
-              Join thousands of students learning programming, UI/UX, business,
-              AI, cybersecurity, and more through expert-led online courses.
+              Join thousands of students learning Language,
+              JAPANESE,IELTS,KOREAN and more through expert-led online courses.
             </p>
 
             {/* Buttons */}
