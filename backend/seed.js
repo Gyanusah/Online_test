@@ -1,7 +1,11 @@
+const dns = require("dns");
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const Language = require("./models/Language");
 require("dotenv").config();
+
+dns.setDefaultResultOrder("ipv4first");
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/eduplatform";
