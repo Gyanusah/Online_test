@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+
 // Generate JWT Token
 const generateToken = (user) => {
   return jwt.sign(
@@ -75,7 +75,7 @@ const signup = async (req, res) => {
         userData.preferredLanguage = preferredLanguage;
       }
     }
-
+    console.log("USER DATA BEFORE SAVE:", userData);
     const user = new User(userData);
     await user.save();
 

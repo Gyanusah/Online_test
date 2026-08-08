@@ -3,9 +3,13 @@ const User = require("./models/User");
 const Language = require("./models/Language");
 require("dotenv").config();
 
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/eduplatform";
+
 const seedUsers = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("Connecting to MongoDB:", MONGODB_URI);
+    await mongoose.connect(MONGODB_URI);
     console.log("MongoDB connected");
 
     // Clear existing users
